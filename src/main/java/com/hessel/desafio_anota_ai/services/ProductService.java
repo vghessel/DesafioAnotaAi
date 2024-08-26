@@ -14,10 +14,12 @@ import java.util.List;
 public class ProductService {
     private CategoryService categoryService;
     private ProductRepository repository;
+    private AwsSnsService snsService;
 
-    public ProductService(CategoryService categoryService, ProductRepository productRepository) {
+    public ProductService(CategoryService categoryService, ProductRepository productRepository, AwsSnsService snsService) {
         this.categoryService = categoryService;
         this.repository = productRepository;
+        this.snsService = snsService;
     }
 
     public Product insert(ProductDTO productData) {
@@ -26,6 +28,7 @@ public class ProductService {
         Product newProduct = new Product(productData);
         newProduct.setCategory(category);
         this.repository.save(newProduct);
+        this.snsService.publish(new MessageDTO(newProduct.getOwnerId()));
         return newProduct;
     }
 
@@ -44,6 +47,8 @@ public class ProductService {
         if(!(productData.price() == null)) product.setPrice((productData.price()));
 
         this.repository.save(product);
+
+        this.snsService.publish(new MessageDTO(product.getOwnerId()));
 
         return product;
     }
